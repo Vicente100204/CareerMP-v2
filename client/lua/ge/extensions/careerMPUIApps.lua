@@ -189,8 +189,13 @@ end
 local function onUpdate(dtReal, dtSim, dtRaw)
 	if worldReadyState == 2 then
 		if stateToUpdate then
-			ui_apps.requestUIAppsData()
 			stateToUpdate = false
+			-- 0.40+: requestUIAppsData no longer exists; notifyLayoutsChanged makes the UI re-fetch.
+			if ui_apps.requestUIAppsData then
+				ui_apps.requestUIAppsData()
+			elseif ui_apps.notifyLayoutsChanged then
+				ui_apps.notifyLayoutsChanged()
+			end
 		end
 	end
 end

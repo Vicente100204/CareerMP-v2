@@ -294,6 +294,9 @@ end
 --Patch BeamMP behavior and topBar
 
 local function patchTopBar()
+	-- 0.40+: ui_topBar was removed; the top bar is driven by ui router routes and the
+	-- career pause menu already hides the vehicle/environment tabs. Same guard BeamMP uses.
+	if not ui_topBar then return end
 	local entries = ui_topBar.getEntries()
 	ui_topBar.removeEntry("environment")
 	ui_topBar.removeEntry("mods")
