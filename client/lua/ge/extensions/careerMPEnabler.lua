@@ -489,6 +489,7 @@ end
 M.getClientConfig = getClientConfig
 
 M.onCareerActive = onCareerActive
+M.onOverhaulActive = onCareerActive -- RLS Career Overhaul fires its own hook
 
 M.onVehicleActiveChanged = onVehicleActiveChanged
 M.onVehicleSpawned = onVehicleSpawned

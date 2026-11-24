@@ -77,7 +77,28 @@ local function deactivateCareer()
 	unpatch()
 end
 
+-- Career modules CareerMP touches, resolved to RLS's overhaul_* equivalents when RLS runs the career.
+-- The RLS functions CareerMP calls keep the vanilla signatures (getInventoryIdFromVehicleId,
+-- getVehicleIdFromInventoryId, getVehicles, getAttribute, addAttributes, saveCurrent).
+local function getInventory()
+	if isRLSLoaded() then return overhaul_career_garage_inventory end
+	return career_modules_inventory
+end
+
+local function getPlayerAttributes()
+	if isRLSLoaded() then return overhaul_career_economy_playerAttributes end
+	return career_modules_playerAttributes
+end
+
+local function getSaveSystem()
+	if isRLSLoaded() then return overhaul_career_saveSystem end
+	return career_saveSystem
+end
+
 M.isRLSLoaded = isRLSLoaded
+M.getInventory = getInventory
+M.getPlayerAttributes = getPlayerAttributes
+M.getSaveSystem = getSaveSystem
 M.getCareer = getCareer
 M.createOrLoadCareerAndStart = createOrLoadCareerAndStart
 M.deactivateCareer = deactivateCareer
