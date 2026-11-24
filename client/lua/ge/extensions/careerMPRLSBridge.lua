@@ -47,6 +47,19 @@ local function limitedSetupTrafficHelper(trafficAmount, options, parkingAmount, 
 	return originals.setupTrafficHelper(trafficAmount, options, parkingAmount, ...)
 end
 
+-- BeamMP's Leave unloads the level without going through returnToMainMenu/quit, the exits RLS
+-- patches to flush its save, so progress since the last 5-minute autosave was lost. Flush first.
+local function leaveServerAfterSave(...)
+	local args, count = {...}, select('#', ...)
+	local saveSystem = overhaul_career_saveSystem
+	local career = overhaul_career_career
+	if saveSystem and saveSystem.flushSaveForExit and career and career.isActive and career.isActive() then
+		log('I', 'careerMP', 'CareerMP RLS bridge: saving the RLS career before leaving the server')
+		return saveSystem.flushSaveForExit(function() originals.leaveServer(unpack(args, 1, count)) end)
+	end
+	return originals.leaveServer(unpack(args, 1, count))
+end
+
 local function patch()
 	if patched or not isRLSLoaded() then return patched end
 	local em = overhaul_shell_extensionManager
@@ -60,6 +73,10 @@ local function patch()
 		originals.setupTrafficHelper = gameplay_traffic.setupTrafficHelper
 		gameplay_traffic.setupTrafficHelper = limitedSetupTrafficHelper
 	end
+	if MPCoreNetwork and MPCoreNetwork.leaveServer then
+		originals.leaveServer = MPCoreNetwork.leaveServer
+		MPCoreNetwork.leaveServer = leaveServerAfterSave
+	end
 	patched = true
 	log('W', 'careerMP', 'CareerMP RLS bridge: RLS career enabled for this multiplayer session')
 	return true
@@ -72,6 +89,9 @@ local function unpatch()
 	end
 	if gameplay_traffic and originals.setupTrafficHelper then
 		gameplay_traffic.setupTrafficHelper = originals.setupTrafficHelper
+	end
+	if MPCoreNetwork and originals.leaveServer then
+		MPCoreNetwork.leaveServer = originals.leaveServer
 	end
 	if originals.removeAll then
 		core_vehicles.removeAll = originals.removeAll

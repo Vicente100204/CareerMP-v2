@@ -41,4 +41,4 @@ Servidor:
 
 Cliente: `careerMPRLSBridge` detecta RLS y redirige carrera, inventario, dinero, guardado y tráfico a los módulos `overhaul_*`. Ver la cabecera del archivo.
 
-Guardado: RLS guarda en `settings/cloud/overhaul/saves/<nick>/` al salir (Leave, "Salir del nivel" o cerrar el juego) y cada 5 minutos. Si el servidor se cae, se pierde lo hecho desde el último autosave.
+Guardado: RLS guarda en `settings/cloud/overhaul/saves/<nick>/` cada 5 minutos y al salir con "Salir del nivel" o al cerrar el juego. El botón Leave de BeamMP se saltaba ese guardado (prueba 12); el puente ahora envuelve `MPCoreNetwork.leaveServer` para guardar antes (sin probar). Si el servidor se cae, se pierde lo hecho desde el último autosave.
