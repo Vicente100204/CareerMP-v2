@@ -24,6 +24,29 @@ local function removeOwnVehiclesOnly()
 	end
 end
 
+-- RLS spawns traffic and parked cars from overhaul_career_police_playerDriving, which ignores the
+-- CareerMP server config. Every one of those cars is synced as this player's vehicle, so clamp
+-- the amounts the same way CareerMP's own playerDriving does.
+local function limitedSetupTrafficHelper(trafficAmount, options, parkingAmount, ...)
+	local config = careerMPEnabler and careerMPEnabler.getClientConfig and careerMPEnabler.getClientConfig()
+	if config then
+		trafficAmount = config.roadTrafficEnabled and math.min(trafficAmount or 0, config.roadTrafficAmount or trafficAmount or 0) or 0
+		parkingAmount = config.parkedTrafficEnabled and math.min(parkingAmount or 0, config.parkedTrafficAmount or parkingAmount or 0) or 0
+	end
+	if (trafficAmount or 0) <= 0 and (parkingAmount or 0) <= 0 then
+		log('I', 'careerMP', 'CareerMP RLS bridge: traffic and parked cars disabled by server config')
+		-- RLS holds the loading screen until traffic reports ready; nothing will spawn, so report it now.
+		local driving = overhaul_career_police_playerDriving
+		if driving and driving.onTrafficOrParkingReady then
+			driving.onTrafficOrParkingReady()
+		elseif core_gamestate.getLoadingStatus('careerVehicles') then
+			core_gamestate.requestExitLoadingScreen('careerVehicles')
+		end
+		return
+	end
+	return originals.setupTrafficHelper(trafficAmount, options, parkingAmount, ...)
+end
+
 local function patch()
 	if patched or not isRLSLoaded() then return patched end
 	local em = overhaul_shell_extensionManager
@@ -33,6 +56,10 @@ local function patch()
 	-- RLS clears the level with core_vehicles.removeAll() when a career starts in the current level.
 	originals.removeAll = core_vehicles.removeAll
 	core_vehicles.removeAll = removeOwnVehiclesOnly
+	if gameplay_traffic then
+		originals.setupTrafficHelper = gameplay_traffic.setupTrafficHelper
+		gameplay_traffic.setupTrafficHelper = limitedSetupTrafficHelper
+	end
 	patched = true
 	log('W', 'careerMP', 'CareerMP RLS bridge: RLS career enabled for this multiplayer session')
 	return true
@@ -42,6 +69,9 @@ local function unpatch()
 	if not patched then return end
 	if overhaul_shell_extensionManager and originals.refuseCareerStart then
 		overhaul_shell_extensionManager.refuseCareerStart = originals.refuseCareerStart
+	end
+	if gameplay_traffic and originals.setupTrafficHelper then
+		gameplay_traffic.setupTrafficHelper = originals.setupTrafficHelper
 	end
 	if originals.removeAll then
 		core_vehicles.removeAll = originals.removeAll
