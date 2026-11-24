@@ -469,6 +469,14 @@ local function onExtensionUnloaded()
 end
 
 local function onServerLeave()
+	-- CareerMP 2.0: leaving (or a server restart) left career active in the main menu, with
+	-- career_modules_* half unloaded; the next join then never reached level loading.
+	-- No save here: the level is already gone, autosaves cover progress.
+	if career_career and career_career.isActive and career_career.isActive() then
+		career_career.deactivateCareer()
+	end
+	careerMPActive = false
+	syncRequested = false
 	unPatchBeamMP()
 	blockedInputActions = {}
 	extensions.core_input_actionFilter.setGroup('careerMP', blockedInputActions)

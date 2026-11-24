@@ -179,6 +179,7 @@ local function checkUIApps(state)
 end
 
 local function onGameStateUpdate(state)
+	if not state or not state.appLayout then return end -- main menu sends states without appLayout
 	if missionUIToResolve and state.appLayout == "freeroam" then
 		core_gamestate.setGameState("career", "career", nil)
 		missionUIToResolve = false
