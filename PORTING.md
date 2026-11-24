@@ -30,3 +30,15 @@ Objetivo: BeamNG.drive 0.40.6, BeamMP actual.
 1. Probar el cliente sin overrides en 0.40.6 + servidor local y leer `beamng.log`.
 2. Portar los cambios MP de playerDriving, walk y drag/display envolviendo funciones del módulo vanilla en vez de reemplazar el archivo.
 3. Revisar inventory y partShopping contra lo que falle en la prueba.
+
+## RLS Career Overhaul (rama `rls-bridge`)
+Probado el 2026-11-23 con RLS 2.8.1, BeamNG 0.40.6, BeamMP Server 3.9.3 (1 jugador).
+
+Servidor:
+- `Resources/Client/` lleva `CareerMP.zip` **y** `rls_career_overhaul_v2.8.1.zip`. BeamMP desactiva los mods locales que el servidor no sirve, así que RLS tiene que ir ahí.
+- `ServerConfig.toml`: `Map = "/levels/rls_west_coast/info.json"`. En `west_coast_usa` RLS arranca, pero sin garages, trabajos ni concesionarios.
+- `rls_west_coast` no viene armado en el zip: RLS lo genera desde `west_coast_usa` en `temp/rls_career/levelcache/` la primera vez que se carga (`overhaul/world/levelProxy.lua`). Cada jugador tiene que haber abierto el juego con RLS una vez antes de conectarse.
+
+Cliente: `careerMPRLSBridge` detecta RLS y redirige carrera, inventario, dinero, guardado y tráfico a los módulos `overhaul_*`. Ver la cabecera del archivo.
+
+Guardado: RLS guarda en `settings/cloud/overhaul/saves/<nick>/` al salir (Leave, "Salir del nivel" o cerrar el juego) y cada 5 minutos. Si el servidor se cae, se pierde lo hecho desde el último autosave.
