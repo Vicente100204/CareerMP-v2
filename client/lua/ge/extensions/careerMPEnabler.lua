@@ -389,7 +389,8 @@ local function rxCareerSync(data)
 		if clientConfig.serverSaveNameEnabled then
 			nickname = clientConfig.serverSaveName
 		end
-		career_career.createOrLoadCareerAndStart(nickname .. clientConfig.serverSaveSuffix, false, false)
+		-- CareerMP 2.0: the bridge picks RLS Career Overhaul when it is loaded, else the stock career
+		careerMPRLSBridge.createOrLoadCareerAndStart(nickname .. clientConfig.serverSaveSuffix)
 		careerMPActive = true
 	end
 end
@@ -472,9 +473,7 @@ local function onServerLeave()
 	-- CareerMP 2.0: leaving (or a server restart) left career active in the main menu, with
 	-- career_modules_* half unloaded; the next join then never reached level loading.
 	-- No save here: the level is already gone, autosaves cover progress.
-	if career_career and career_career.isActive and career_career.isActive() then
-		career_career.deactivateCareer()
-	end
+	careerMPRLSBridge.deactivateCareer()
 	careerMPActive = false
 	syncRequested = false
 	unPatchBeamMP()
@@ -490,6 +489,7 @@ end
 M.getClientConfig = getClientConfig
 
 M.onCareerActive = onCareerActive
+M.onOverhaulActive = onCareerActive -- RLS Career Overhaul fires its own hook
 
 M.onVehicleActiveChanged = onVehicleActiveChanged
 M.onVehicleSpawned = onVehicleSpawned

@@ -18,7 +18,7 @@ local function payPlayer(player_name, amount)
 			amount = math.abs(amount)
 		end
 		if player_name and player_name ~= nickname then
-			local selfMoney = career_modules_playerAttributes.getAttribute("money").value
+			local selfMoney = careerMPRLSBridge.getPlayerAttributes().getAttribute("money").value
 			if selfMoney then
 				local validTransaction = selfMoney - amount >= 0
 				if validTransaction then
@@ -45,8 +45,8 @@ end
 
 local function rxPayment(data)
 	local paymentData = jsonDecode(data)
-	career_modules_playerAttributes.addAttributes({money = paymentData.money}, {tags = paymentData.tags, label = "Payment from player: " .. paymentData.sender})
-	career_saveSystem.saveCurrent()
+	careerMPRLSBridge.getPlayerAttributes().addAttributes({money = paymentData.money}, {tags = paymentData.tags, label = "Payment from player: " .. paymentData.sender})
+	careerMPRLSBridge.getSaveSystem().saveCurrent()
 	guihooks.trigger('toastrMsg', {type = "info", title = "Transaction #" .. paymentID, msg = paymentData.sender .. " paid you $" .. paymentData.money, config = {timeOut = 2000}})
 	paymentID = paymentID + 1
 end
@@ -58,8 +58,8 @@ end
 
 local function rxConfirmation(data)
 	local paymentData = jsonDecode(data)
-	career_modules_playerAttributes.addAttributes({money = -paymentData.money}, {tags = paymentData.tags, label = paymentData.label})
-	career_saveSystem.saveCurrent()
+	careerMPRLSBridge.getPlayerAttributes().addAttributes({money = -paymentData.money}, {tags = paymentData.tags, label = paymentData.label})
+	careerMPRLSBridge.getSaveSystem().saveCurrent()
 	guihooks.trigger('toastrMsg', {type = "info", title = "Transaction #" .. paymentID, msg = "You paid " .. paymentData.target_player_name .. " $" .. paymentData.money, config = {timeOut = 2000}})
 	paymentID = paymentID + 1
 end

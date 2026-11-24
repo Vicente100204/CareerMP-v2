@@ -32,6 +32,10 @@ local defaultLayouts = {
 	garage = { filename = "garage" },
 	garage_v2 = { filename = "garage_v2" },
 	multiseatscenario = { filename = "multiseatscenario" },
+	-- RLS Career Overhaul drives with its own layout, shipped under originalLayouts/overhaul/.
+	-- The game pairs a user layout with its original by subfolder (ui/appLayouts.lua), so the copy goes
+	-- to layouts/overhaul/; a copy in layouts/default/ is ignored.
+	overhaul = { filename = "overhaul", defaultDir = "settings/ui_apps/originalLayouts/overhaul/", customDir = "settings/ui_apps/layouts/overhaul/" },
 	noncompeteScenario = { filename = "noncompeteScenario" },
 	offroadScenario = { filename = "offroadScenario" },
 	proceduralScenario = { filename = "proceduralScenario" },
@@ -159,12 +163,16 @@ local function checkUIApps(state)
 	if not layoutInfo then
 		return
 	end
-	local customDir = defaultLayouts[state.appLayout] and userDefaultAppLayoutDirectory or userMissionAppLayoutDirectory    local defaultDir = defaultLayouts[state.appLayout] and defaultAppLayoutDirectory or missionAppLayoutDirectory
-	local layout, saveDir = loadLayout(customDir, defaultDir, layoutInfo.filename)
+	local customDir = layoutInfo.customDir or (defaultLayouts[state.appLayout] and userDefaultAppLayoutDirectory or userMissionAppLayoutDirectory)    local defaultDir = defaultLayouts[state.appLayout] and defaultAppLayoutDirectory or missionAppLayoutDirectory
+	local layout, saveDir = loadLayout(customDir, layoutInfo.defaultDir or defaultDir, layoutInfo.filename)
 	if not layout then
 		return
 	end
 	local updated = false
+	-- Written to the wrong folder by an earlier CareerMP 2.0 test build; it shadows nothing and only confuses.
+	if layoutInfo.customDir and FS:fileExists(userDefaultAppLayoutDirectory .. layoutInfo.filename .. ".uilayout.json") then
+		FS:removeFile(userDefaultAppLayoutDirectory .. layoutInfo.filename .. ".uilayout.json")
+	end
 	updated = replaceApp(layout, "multiplayerchat", multiplayerApps.multiplayerchat) or updated -- 0.40: BeamMP renamed it to beammpchat
 	updated = checkApp(layout, multiplayerApps.multiplayerchat) or updated
 	updated = replaceApp(layout, "multiplayersession", multiplayerApps.multiplayersession) or updated -- 0.40: BeamMP renamed it to beammpsession
@@ -174,6 +182,7 @@ local function checkUIApps(state)
 	updated = checkApp(layout, multiplayerApps.careermpplayerlist) or updated
 	if updated then
 		jsonWriteFile(saveDir .. layoutInfo.filename .. ".uilayout.json", layout, 1)
+		log('I', 'careerMP', 'CareerMP UI Apps: added multiplayer apps to ' .. saveDir .. layoutInfo.filename .. '.uilayout.json')
 		stateToUpdate = true
 	end
 end
@@ -181,10 +190,14 @@ end
 local function onGameStateUpdate(state)
 	if not state or not state.appLayout then return end -- main menu sends states without appLayout
 	if missionUIToResolve and state.appLayout == "freeroam" then
-		core_gamestate.setGameState("career", "career", nil)
+		if careerMPRLSBridge and careerMPRLSBridge.isRLSLoaded() then
+			core_gamestate.setGameState("overhaul", "overhaul", nil)
+		else
+			core_gamestate.setGameState("career", "career", nil)
+		end
 		missionUIToResolve = false
 	end
-	if not state.appLayout:find("career") then
+	if not state.appLayout:find("career") and state.appLayout ~= "overhaul" then
 		missionUIToResolve = true
 	end
 	checkUIApps(state)

@@ -191,8 +191,16 @@ local function applyPartPaintRemote(data)
 	)
 end
 
+local function vehicleIdFromInventoryId(inventoryId)
+	local inventory = careerMPRLSBridge.getInventory()
+	return inventory and inventory.getVehicleIdFromInventoryId(inventoryId)
+end
+
 local function sendPartPaints(inventoryId, serverVehicleID, originID)
-	local partConditions = career_modules_inventory.getVehicles()[inventoryId].partConditions
+	local inventory = careerMPRLSBridge.getInventory()
+	local vehicle = inventory and inventory.getVehicles()[inventoryId]
+	local partConditions = vehicle and vehicle.partConditions
+	if not partConditions then return end
 	for part, partData in pairs(partConditions) do
 		if partData.visualState then
 			local data = {}
@@ -238,7 +246,7 @@ end
 local function rxRequestPartPaints(data)
 	local requestData = jsonDecode(data)
 	local gameVehicleID = MPVehicleGE.getGameVehicleID(requestData.serverVehicleID)
-	local inventoryId = career_modules_inventory.getInventoryIdFromVehicleId(gameVehicleID)
+	local inventoryId = careerMPRLSBridge.getInventory() and careerMPRLSBridge.getInventory().getInventoryIdFromVehicleId(gameVehicleID)
 	if not inventoryId then
 		return
 	end
@@ -251,7 +259,7 @@ local function onVehicleReady(gameVehicleID)
 		if not MPVehicleGE.isOwn(gameVehicleID) then
 			TriggerServerEvent("requestPartPaints", jsonEncode({serverVehicleID = serverVehicleID}))
 		else
-			local inventoryId = career_modules_inventory.getInventoryIdFromVehicleId(gameVehicleID)
+			local inventoryId = careerMPRLSBridge.getInventory() and careerMPRLSBridge.getInventory().getInventoryIdFromVehicleId(gameVehicleID)
 			if inventoryId then
 				sendPartPaints(inventoryId, serverVehicleID)
 			end
@@ -267,7 +275,7 @@ end
 
 local function onPartShoppingStarted(targetVehicleID, inventoryId)
 	if inventoryId then
-		local gameVehicleID = career_modules_inventory.getVehicleIdFromInventoryId(inventoryId)
+		local gameVehicleID = vehicleIdFromInventoryId(inventoryId)
 		if gameVehicleID then
 			local serverVehicleID = MPVehicleGE.getServerVehicleID(gameVehicleID)
 			if serverVehicleID then
@@ -279,7 +287,7 @@ end
 
 local function onPartShoppingPartInstalled(partData)
 	if partData.inventoryId then
-		local gameVehicleID = career_modules_inventory.getVehicleIdFromInventoryId(partData.inventoryId)
+		local gameVehicleID = vehicleIdFromInventoryId(partData.inventoryId)
 		if gameVehicleID then
 			local serverVehicleID = MPVehicleGE.getServerVehicleID(gameVehicleID)
 			if serverVehicleID then
@@ -291,13 +299,22 @@ end
 
 local function onPartShoppingTransactionComplete(inventoryId)
 	if inventoryId then
-		local gameVehicleID = career_modules_inventory.getVehicleIdFromInventoryId(inventoryId)
+		local gameVehicleID = vehicleIdFromInventoryId(inventoryId)
 		if gameVehicleID then
 			local serverVehicleID = MPVehicleGE.getServerVehicleID(gameVehicleID)
 			if serverVehicleID then
 				sendPartPaints(inventoryId, serverVehicleID)
 			end
 		end
+	end
+end
+
+-- RLS fires onOverhaulPartShopping* without an inventory id; the shop works on the player vehicle.
+local function onOverhaulPartShoppingChanged()
+	local inventory = careerMPRLSBridge.getInventory()
+	local inventoryId = inventory and inventory.getInventoryIdFromVehicleId(be:getPlayerVehicleID(0))
+	if inventoryId then
+		onPartShoppingTransactionComplete(inventoryId)
 	end
 end
 
@@ -313,7 +330,7 @@ local function onUpdate()
 		local vehicles
 		for i = #pendingPaints, 1, -1 do
 			local entry = pendingPaints[i]
-			local gameVehicleID = career_modules_inventory.getVehicleIdFromInventoryId(entry)
+			local gameVehicleID = vehicleIdFromInventoryId(entry)
 			if gameVehicleID then
 				vehicles = MPVehicleGE.getVehicles()
 				for serverVehicleID, vehicleData in pairs(vehicles) do
@@ -368,6 +385,8 @@ M.onVehicleDestroyed = onVehicleDestroyed
 M.onPartShoppingStarted = onPartShoppingStarted
 M.onPartShoppingPartInstalled = onPartShoppingPartInstalled
 M.onPartShoppingTransactionComplete = onPartShoppingTransactionComplete
+M.onOverhaulPartShoppingPartInstalled = onOverhaulPartShoppingChanged
+M.onOverhaulPartShoppingTransactionComplete = onOverhaulPartShoppingChanged
 
 M.onUpdate = onUpdate
 

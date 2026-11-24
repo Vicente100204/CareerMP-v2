@@ -1,3 +1,6 @@
+load('careerMPRLSBridge')
+setExtensionUnloadMode('careerMPRLSBridge', 'manual')
+
 load('careerMPEnabler')
 setExtensionUnloadMode('careerMPEnabler', 'manual')
 
