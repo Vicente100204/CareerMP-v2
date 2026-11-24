@@ -74,7 +74,7 @@ local multiplayerApps = {
 		}
 	},
 	multiplayersession = {
-		appName = "multiplayersession",
+		appName = "beammpSession",
 		placement = {
 			bottom = "",
 			height = "40px",
@@ -166,6 +166,7 @@ local function checkUIApps(state)
 	end
 	local updated = false
 	updated = checkApp(layout, multiplayerApps.multiplayerchat) or updated
+	updated = replaceApp(layout, "multiplayersession", multiplayerApps.multiplayersession) or updated -- 0.40: BeamMP renamed it to beammpSession
 	updated = checkApp(layout, multiplayerApps.multiplayersession) or updated
 	updated = replaceApp(layout, "multiplayerplayerlist", multiplayerApps.careermpplayerlist) or updated
 	updated = checkApp(layout, multiplayerApps.careermpplayerlist) or updated

@@ -94,7 +94,7 @@
       }
     },
     {
-      "appName":"multiplayersession",
+      "appName":"beammpSession",
       "placement":{
         "bottom":"",
         "height":"40px",
