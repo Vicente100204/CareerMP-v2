@@ -65,7 +65,7 @@ local missionLayouts = {
 
 local multiplayerApps = {
 	multiplayerchat = {
-		appName = "multiplayerchat",
+		appName = "beammpchat",
 		placement = {
 			width = "550px",
 			bottom = "0px",
@@ -74,7 +74,7 @@ local multiplayerApps = {
 		}
 	},
 	multiplayersession = {
-		appName = "beammpSession",
+		appName = "beammpsession",
 		placement = {
 			bottom = "",
 			height = "40px",
@@ -165,8 +165,10 @@ local function checkUIApps(state)
 		return
 	end
 	local updated = false
+	updated = replaceApp(layout, "multiplayerchat", multiplayerApps.multiplayerchat) or updated -- 0.40: BeamMP renamed it to beammpchat
 	updated = checkApp(layout, multiplayerApps.multiplayerchat) or updated
-	updated = replaceApp(layout, "multiplayersession", multiplayerApps.multiplayersession) or updated -- 0.40: BeamMP renamed it to beammpSession
+	updated = replaceApp(layout, "multiplayersession", multiplayerApps.multiplayersession) or updated -- 0.40: BeamMP renamed it to beammpsession
+	updated = replaceApp(layout, "beammpSession", multiplayerApps.multiplayersession) or updated -- written by an earlier CareerMP 2.0 test build
 	updated = checkApp(layout, multiplayerApps.multiplayersession) or updated
 	updated = replaceApp(layout, "multiplayerplayerlist", multiplayerApps.careermpplayerlist) or updated
 	updated = checkApp(layout, multiplayerApps.careermpplayerlist) or updated

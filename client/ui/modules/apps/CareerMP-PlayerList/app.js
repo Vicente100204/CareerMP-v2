@@ -4,7 +4,7 @@
 
 var connected = false;
 var players = [];
-let pingList = [];
+var pingList = []; // var: BeamMP's player list declares the same global
 var nickname = "";
 var app = angular.module('beamng.apps');
 app.directive('careermpplayerlist', [function () {

@@ -73,7 +73,7 @@
       }
     },
     {
-      "appName":"multiplayerchat",
+      "appName":"beammpchat",
       "placement":{
         "bottom":"0px",
         "height":"170px",
@@ -94,7 +94,7 @@
       }
     },
     {
-      "appName":"beammpSession",
+      "appName":"beammpsession",
       "placement":{
         "bottom":"",
         "height":"40px",
