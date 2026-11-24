@@ -32,6 +32,8 @@ local defaultLayouts = {
 	garage = { filename = "garage" },
 	garage_v2 = { filename = "garage_v2" },
 	multiseatscenario = { filename = "multiseatscenario" },
+	-- RLS Career Overhaul drives with its own layout, shipped under originalLayouts/overhaul/.
+	overhaul = { filename = "overhaul", defaultDir = "settings/ui_apps/originalLayouts/overhaul/" },
 	noncompeteScenario = { filename = "noncompeteScenario" },
 	offroadScenario = { filename = "offroadScenario" },
 	proceduralScenario = { filename = "proceduralScenario" },
@@ -160,7 +162,7 @@ local function checkUIApps(state)
 		return
 	end
 	local customDir = defaultLayouts[state.appLayout] and userDefaultAppLayoutDirectory or userMissionAppLayoutDirectory    local defaultDir = defaultLayouts[state.appLayout] and defaultAppLayoutDirectory or missionAppLayoutDirectory
-	local layout, saveDir = loadLayout(customDir, defaultDir, layoutInfo.filename)
+	local layout, saveDir = loadLayout(customDir, layoutInfo.defaultDir or defaultDir, layoutInfo.filename)
 	if not layout then
 		return
 	end
@@ -181,10 +183,14 @@ end
 local function onGameStateUpdate(state)
 	if not state or not state.appLayout then return end -- main menu sends states without appLayout
 	if missionUIToResolve and state.appLayout == "freeroam" then
-		core_gamestate.setGameState("career", "career", nil)
+		if careerMPRLSBridge and careerMPRLSBridge.isRLSLoaded() then
+			core_gamestate.setGameState("overhaul", "overhaul", nil)
+		else
+			core_gamestate.setGameState("career", "career", nil)
+		end
 		missionUIToResolve = false
 	end
-	if not state.appLayout:find("career") then
+	if not state.appLayout:find("career") and state.appLayout ~= "overhaul" then
 		missionUIToResolve = true
 	end
 	checkUIApps(state)
